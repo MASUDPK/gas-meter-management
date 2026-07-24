@@ -39,7 +39,7 @@ html<!DOCTYPE html>
 <body>
 
     <header>
-        <h1>🏠 আবাসিক গ্যাস ম্যানেজমেন্ট সিস্টেম</h1>
+        <h1>🏠 আবাসিক gas ম্যানেজমেন্ট সিস্টেম</h1>
         <p>৮ তলা ভবন | মোট মিটার: ২৮ টি</p>
         <p>ঠিকানা, ফোন এবং ইমেইল আপনি আপনার সুবিধামতো এখানে লিখে নিতে পারবেন</p>
     </header>
@@ -71,6 +71,7 @@ html<!DOCTYPE html>
                 <button onclick="calculateBills()" class="btn-blue">🔄 হিসাব আপডেট করুন</button>
                 <button onclick="saveDataToLocal()" class="btn-green">💾 ডাটা সেভ করুন</button>
                 <button onclick="sendEmailBackup()" class="btn-red">📧 পিডিএফ/মেইল ব্যাকআপ</button>
+                <button onclick="resetAppMemory()" style="background-color: #64748b;">⚠️ ডাটা রিসেট করুন</button>
             </div>
         </div>
 
@@ -89,7 +90,7 @@ html<!DOCTYPE html>
                         </tr>
                     </thead>
                     <tbody id="meterTableBody">
-                        <!-- এখানে জাভাস্ক্রিপ্ট ২৮টি ফ্ল্যাট তৈরি করবে -->
+                        <!-- rows will generate here -->
                     </tbody>
                 </table>
             </div>
@@ -102,30 +103,42 @@ html<!DOCTYPE html>
         let gasData = [];
 
         function initData() {
+            // যদি আগের মেমোরি জটলা থাকে বা ভেঙে গিয়ে থাকে, তাকে জোরপূর্বক ডিলিট করে ফ্রেশ করা হবে
             const savedData = localStorage.getItem('gasManagementData');
-            if (savedData) {
-                gasData = JSON.parse(savedData);
-            } else {
-                for (let i = 1; i <= totalMeters; i++) {
-                    let floor = Math.ceil(i / 4); 
-                    let unitLetter = String.fromCharCode(64 + (i % 4 || 4)); 
-                    gasData.push({
-                        id: i,
-                        flat: `ফ্ল্যাট-${floor}${unitLetter}`,
-                        meterNo: `G-MET-100${i}`,
-                        prevReading: 100,
-                        currReading: 120,
-                        usedUnit: 20,
-                        totalBill: 300
-                    });
+            if (savedData && savedData.includes('flat')) {
+                try {
+                    gasData = JSON.parse(savedData);
+                } catch(e) {
+                    generateFreshMeters();
                 }
+            } else {
+                generateFreshMeters();
             }
             renderTable();
             calculateBills();
         }
 
+        function generateFreshMeters() {
+            gasData = [];
+            for (let i = 1; i <= totalMeters; i++) {
+                let floor = Math.ceil(i / 4); 
+                let unitLetter = String.fromCharCode(64 + (i % 4 || 4)); 
+                gasData.push({
+                    id: i,
+                    flat: `ফ্ল্যাট-${floor}${unitLetter}`,
+                    meterNo: `G-MET-100${i}`,
+                    prevReading: 100,
+                    currReading: 120,
+                    usedUnit: "20.00",
+                    totalBill: "300.00"
+                });
+            }
+            localStorage.setItem('gasManagementData', JSON.stringify(gasData));
+        }
+
         function renderTable() {
             const tbody = document.getElementById('meterTableBody');
+            if(!tbody) return;
             tbody.innerHTML = '';
             gasData.forEach((meter, index) => {
                 const row = `
@@ -179,410 +192,3 @@ html<!DOCTYPE html>
         function calculateBills() {
             let mainTk = parseFloat(document.getElementById('mainTotalTk').value) || 0;
             let mainUnit = parseFloat(document.getElementById('mainTotalUnit').value) || 0;
-            let perUnitRate = mainUnit > 0 ? (mainTk / mainUnit) : 15;
-
-            let sumUnit = 0;
-            let sumTk = 0;
-
-            gasData.forEach((meter, index) => {
-                let used = meter.currReading - meter.prevReading;
-                if (used < 0) used = 0; 
-                let bill = used * perUnitRate;
-
-                gasData[index].usedUnit = used.toFixed(2);
-                gasData[index].totalBill = bill.toFixed(2);
-
-                sumUnit += used;
-                sumTk += bill;
-html<!DOCTYPE html>
-<html lang="bn">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>আবাসিক গ্যাস ম্যানেজমেন্ট সিস্টেম</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f4f8; margin: 0; padding: 0; color: #333; }
-        header { background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; padding: 30px 20px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        header h1 { margin: 0 0 10px 0; font-size: 28px; font-weight: bold; }
-        header p { margin: 5px 0; font-size: 14px; opacity: 0.9; }
-        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
-        .card { background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 25px; margin-bottom: 30px; border-top: 5px solid #2563eb; }
-        .card h2 { margin-top: 0; font-size: 20px; color: #1e3a8a; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 25px; }
-        .grid-item { padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; }
-        .bg-blue { background-color: #eff6ff; border-color: #bfdbfe; }
-        .bg-green { background-color: #f0fdf4; border-color: #bbf7d0; }
-        .bg-purple { background-color: #faf5ff; border-color: #e9d5ff; }
-        .bg-amber { background-color: #fffbeb; border-color: #fde68a; }
-        .label { display: block; font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 5px; }
-        .input-main { background: white; border: 1px solid #cbd5e1; padding: 6px 10px; font-size: 18px; font-weight: bold; color: #1e3a8a; border-radius: 6px; box-sizing: border-box; width: 100%; }
-        .val-display { font-size: 20px; font-weight: bold; margin-top: 5px; }
-        .btn-group { display: flex; flex-wrap: wrap; gap: 12px; justify-content: flex-end; }
-        button { font-weight: bold; padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; transition: 0.2s; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .btn-blue { background-color: #2563eb; } .btn-blue:hover { background-color: #1d4ed8; }
-        .btn-green { background-color: #16a34a; } .btn-green:hover { background-color: #15803d; }
-        .btn-red { background-color: #dc2626; } .btn-red:hover { background-color: #b91c1c; }
-        .table-responsive { overflow-x: auto; background: white; border-radius: 12px; border: 1px solid #e2e8f0; margin-top: 15px; }
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { background-color: #f8fafc; color: #475569; padding: 14px; font-weight: 600; border-bottom: 2px solid #e2e8f0; font-size: 14px; }
-        td { padding: 12px 14px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
-        tr:hover { background-color: #f8fafc; }
-        .input-table { border: 1px solid #cbd5e1; border-radius: 4px; padding: 5px 8px; width: 90px; font-size: 14px; }
-        .txt-bold-blue { font-weight: bold; color: #2563eb; }
-        .txt-bold-green { font-weight: bold; color: #16a34a; }
-    </style>
-</head>
-<body>
-
-    <header>
-        <h1>🏠 আবাসিক গ্যাস ম্যানেজমেন্ট সিস্টেম</h1>
-        <p>৮ তলা ভবন | মোট মিটার: ২৮ টি</p>
-        <p>ঠিকানা, ফোন এবং ইমেইল আপনি আপনার সুবিধামতো এখানে লিখে নিতে পারবেন</p>
-    </header>
-
-    <div class="container">
-        
-        <div class="card">
-            <h2>📊 মেইন ড্যাশবোর্ড (চলতি মাস)</h2>
-            <div class="grid">
-                <div class="grid-item bg-blue">
-                    <span class="label">সাব-স্টেশন মোট কেনা গ্যাস (টাকা)</span>
-                    <input type="number" id="mainTotalTk" oninput="calculateBills()" class="input-main" value="15000">
-                </div>
-                <div class="grid-item bg-green">
-                    <span class="label">সাব-স্টেশন মোট ইউনিট (m³)</span>
-                    <input type="number" id="mainTotalUnit" oninput="calculateBills()" class="input-main" value="1000">
-                </div>
-                <div class="grid-item bg-purple">
-                    <span class="label">২৮টি মিটারে মোট পুড়ছে (ইউনিট)</span>
-                    <div id="calcTotalUnit" class="val-display" style="color: #6b21a8;">0.00</div>
-                </div>
-                <div class="grid-item bg-amber">
-                    <span class="label">মোট সংগৃহীত টাকা (বিল)</span>
-                    <div id="calcTotalTk" class="val-display" style="color: #92400e;">৳ 0.00</div>
-                </div>
-            </div>
-            
-            <div class="btn-group">
-                <button onclick="calculateBills()" class="btn-blue">🔄 হিসাব আপডেট করুন</button>
-                <button onclick="saveDataToLocal()" class="btn-green">💾 ডাটা সেভ করুন</button>
-                <button onclick="sendEmailBackup()" class="btn-red">📧 পিডিএফ/মেইল ব্যাকআপ</button>
-            </div>
-        </div>
-
-        <div class="card">
-            <h2>🔑 ২৮টি ফ্ল্যাটের আলাদা প্রোফাইল ও মিটার রিডিং</h2>
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ফ্ল্যাট / প্রোফাইল</th>
-                            <th>মিটার নম্বর</th>
-                            <th>পূর্বের রিডিং</th>
-                            <th>বর্তমান রিডিং</th>
-                            <th>ব্যবহৃত ইউনিট</th>
-                            <th>মোট বিল (টাকা)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="meterTableBody">
-                        <!-- এখানে জাভাস্ক্রিপ্ট ২৮টি ফ্ল্যাট তৈরি করবে -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-    </div>
-
-    <script>
-        const totalMeters = 28;
-        let gasData = [];
-
-        function initData() {
-            const savedData = localStorage.getItem('gasManagementData');
-            if (savedData) {
-                gasData = JSON.parse(savedData);
-            } else {
-                for (let i = 1; i <= totalMeters; i++) {
-                    let floor = Math.ceil(i / 4); 
-                    let unitLetter = String.fromCharCode(64 + (i % 4 || 4)); 
-                    gasData.push({
-                        id: i,
-                        flat: `ফ্ল্যাট-${floor}${unitLetter}`,
-                        meterNo: `G-MET-100${i}`,
-                        prevReading: 100,
-                        currReading: 120,
-                        usedUnit: 20,
-                        totalBill: 300
-                    });
-                }
-            }
-            renderTable();
-            calculateBills();
-        }
-
-        function renderTable() {
-            const tbody = document.getElementById('meterTableBody');
-            tbody.innerHTML = '';
-            gasData.forEach((meter, index) => {
-                const row = `
-                    <tr>
-                        <td style="font-weight: 600; color: #1e293b;">${meter.flat}</td>
-                        <td style="color: #64748b;">${meter.meterNo}</td>
-                        <td>
-                            <input type="number" oninput="updateMeter(${index}, 'prevReading', this.value)" class="input-table" value="${meter.prevReading}">
-                        </td>
-                        <td>
-                            <input type="number" oninput="updateMeter(${index}, 'currReading', this.value)" class="input-table" value="${meter.currReading}">
-                        </td>
-                        <td class="txt-bold-blue" id="used-${index}">${meter.usedUnit}</td>
-                        <td class="txt-bold-green" id="bill-${index}">৳ ${meter.totalBill}</td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
-            });
-        }
-
-        function updateMeter(index, field, value) {
-            gasData[index][field] = parseFloat(value) || 0;
-            let used = gasData[index].currReading - gasData[index].prevReading;
-            if (used < 0) used = 0;
-            
-            let mainTk = parseFloat(document.getElementById('mainTotalTk').value) || 0;
-            let mainUnit = parseFloat(document.getElementById('mainTotalUnit').value) || 0;
-            let perUnitRate = mainUnit > 0 ? (mainTk / mainUnit) : 15;
-            let bill = used * perUnitRate;
-
-            gasData[index].usedUnit = used.toFixed(2);
-            gasData[index].totalBill = bill.toFixed(2);
-
-            document.getElementById(`used-${index}`).innerText = used.toFixed(2);
-            document.getElementById(`bill-${index}`).innerText = '৳ ' + bill.toFixed(2);
-
-            calculateTotalsOnly();
-        }
-
-        function calculateTotalsOnly() {
-            let sumUnit = 0;
-            let sumTk = 0;
-            gasData.forEach(meter => {
-                sumUnit += parseFloat(meter.usedUnit) || 0;
-                sumTk += parseFloat(meter.totalBill) || 0;
-            });
-            document.getElementById('calcTotalUnit').innerText = sumUnit.toFixed(2) + " m³";
-            document.getElementById('calcTotalTk').innerText = '৳ ' + sumTk.toFixed(2);
-        }
-
-        function calculateBills() {
-            let mainTk = parseFloat(document.getElementById('mainTotalTk').value) || 0;
-            let mainUnit = parseFloat(document.getElementById('mainTotalUnit').value) || 0;
-            let perUnitRate = mainUnit > 0 ? (mainTk / mainUnit) : 15;
-
-            let sumUnit = 0;
-            let sumTk = 0;
-
-            gasData.forEach((meter, index) => {
-                let used = meter.currReading - meter.prevReading;
-                if (used < 0) used = 0; 
-                let bill = used * perUnitRate;
-
-                gasData[index].usedUnit = used.toFixed(2);
-                gasData[index].totalBill = bill.toFixed(2);
-
-                sumUnit += used;
-                sumTk += bill;
-html<!DOCTYPE html>
-<html lang="bn">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>আবাসিক গ্যাস ম্যানেজমেন্ট সিস্টেম</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f4f8; margin: 0; padding: 0; color: #333; }
-        header { background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; padding: 30px 20px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        header h1 { margin: 0 0 10px 0; font-size: 28px; font-weight: bold; }
-        header p { margin: 5px 0; font-size: 14px; opacity: 0.9; }
-        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
-        .card { background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 25px; margin-bottom: 30px; border-top: 5px solid #2563eb; }
-        .card h2 { margin-top: 0; font-size: 20px; color: #1e3a8a; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 25px; }
-        .grid-item { padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; }
-        .bg-blue { background-color: #eff6ff; border-color: #bfdbfe; }
-        .bg-green { background-color: #f0fdf4; border-color: #bbf7d0; }
-        .bg-purple { background-color: #faf5ff; border-color: #e9d5ff; }
-        .bg-amber { background-color: #fffbeb; border-color: #fde68a; }
-        .label { display: block; font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 5px; }
-        .input-main { background: white; border: 1px solid #cbd5e1; padding: 6px 10px; font-size: 18px; font-weight: bold; color: #1e3a8a; border-radius: 6px; box-sizing: border-box; width: 100%; }
-        .val-display { font-size: 20px; font-weight: bold; margin-top: 5px; }
-        .btn-group { display: flex; flex-wrap: wrap; gap: 12px; justify-content: flex-end; }
-        button { font-weight: bold; padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; transition: 0.2s; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .btn-blue { background-color: #2563eb; } .btn-blue:hover { background-color: #1d4ed8; }
-        .btn-green { background-color: #16a34a; } .btn-green:hover { background-color: #15803d; }
-        .btn-red { background-color: #dc2626; } .btn-red:hover { background-color: #b91c1c; }
-        .table-responsive { overflow-x: auto; background: white; border-radius: 12px; border: 1px solid #e2e8f0; margin-top: 15px; }
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { background-color: #f8fafc; color: #475569; padding: 14px; font-weight: 600; border-bottom: 2px solid #e2e8f0; font-size: 14px; }
-        td { padding: 12px 14px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
-        tr:hover { background-color: #f8fafc; }
-        .input-table { border: 1px solid #cbd5e1; border-radius: 4px; padding: 5px 8px; width: 90px; font-size: 14px; }
-        .txt-bold-blue { font-weight: bold; color: #2563eb; }
-        .txt-bold-green { font-weight: bold; color: #16a34a; }
-    </style>
-</head>
-<body>
-
-    <header>
-        <h1>🏠 আবাসিক গ্যাস ম্যানেজমেন্ট সিস্টেম</h1>
-        <p>৮ তলা ভবন | মোট মিটার: ২৮ টি</p>
-        <p>ঠিকানা, ফোন এবং ইমেইল আপনি আপনার সুবিধামতো এখানে লিখে নিতে পারবেন</p>
-    </header>
-
-    <div class="container">
-        
-        <div class="card">
-            <h2>📊 মেইন ড্যাশবোর্ড (চলতি মাস)</h2>
-            <div class="grid">
-                <div class="grid-item bg-blue">
-                    <span class="label">সাব-স্টেশন মোট কেনা গ্যাস (টাকা)</span>
-                    <input type="number" id="mainTotalTk" oninput="calculateBills()" class="input-main" value="15000">
-                </div>
-                <div class="grid-item bg-green">
-                    <span class="label">সাব-স্টেশন মোট ইউনিট (m³)</span>
-                    <input type="number" id="mainTotalUnit" oninput="calculateBills()" class="input-main" value="1000">
-                </div>
-                <div class="grid-item bg-purple">
-                    <span class="label">২৮টি মিটারে মোট পুড়ছে (ইউনিট)</span>
-                    <div id="calcTotalUnit" class="val-display" style="color: #6b21a8;">0.00</div>
-                </div>
-                <div class="grid-item bg-amber">
-                    <span class="label">মোট সংগৃহীত টাকা (বিল)</span>
-                    <div id="calcTotalTk" class="val-display" style="color: #92400e;">৳ 0.00</div>
-                </div>
-            </div>
-            
-            <div class="btn-group">
-                <button onclick="calculateBills()" class="btn-blue">🔄 হিসাব আপডেট করুন</button>
-                <button onclick="saveDataToLocal()" class="btn-green">💾 ডাটা সেভ করুন</button>
-                <button onclick="sendEmailBackup()" class="btn-red">📧 পিডিএফ/মেইল ব্যাকআপ</button>
-            </div>
-        </div>
-
-        <div class="card">
-            <h2>🔑 ২৮টি ফ্ল্যাটের আলাদা প্রোফাইল ও মিটার রিডিং</h2>
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ফ্ল্যাট / প্রোফাইল</th>
-                            <th>মিটার নম্বর</th>
-                            <th>পূর্বের রিডিং</th>
-                            <th>বর্তমান রিডিং</th>
-                            <th>ব্যবহৃত ইউনিট</th>
-                            <th>মোট বিল (টাকা)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="meterTableBody">
-                        <!-- এখানে জাভাস্ক্রিপ্ট ২৮টি ফ্ল্যাট তৈরি করবে -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-    </div>
-
-    <script>
-        const totalMeters = 28;
-        let gasData = [];
-
-        function initData() {
-            const savedData = localStorage.getItem('gasManagementData');
-            if (savedData) {
-                gasData = JSON.parse(savedData);
-            } else {
-                for (let i = 1; i <= totalMeters; i++) {
-                    let floor = Math.ceil(i / 4); 
-                    let unitLetter = String.fromCharCode(64 + (i % 4 || 4)); 
-                    gasData.push({
-                        id: i,
-                        flat: `ফ্ল্যাট-${floor}${unitLetter}`,
-                        meterNo: `G-MET-100${i}`,
-                        prevReading: 100,
-                        currReading: 120,
-                        usedUnit: 20,
-                        totalBill: 300
-                    });
-                }
-            }
-            renderTable();
-            calculateBills();
-        }
-
-        function renderTable() {
-            const tbody = document.getElementById('meterTableBody');
-            tbody.innerHTML = '';
-            gasData.forEach((meter, index) => {
-                const row = `
-                    <tr>
-                        <td style="font-weight: 600; color: #1e293b;">${meter.flat}</td>
-                        <td style="color: #64748b;">${meter.meterNo}</td>
-                        <td>
-                            <input type="number" oninput="updateMeter(${index}, 'prevReading', this.value)" class="input-table" value="${meter.prevReading}">
-                        </td>
-                        <td>
-                            <input type="number" oninput="updateMeter(${index}, 'currReading', this.value)" class="input-table" value="${meter.currReading}">
-                        </td>
-                        <td class="txt-bold-blue" id="used-${index}">${meter.usedUnit}</td>
-                        <td class="txt-bold-green" id="bill-${index}">৳ ${meter.totalBill}</td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
-            });
-        }
-
-        function updateMeter(index, field, value) {
-            gasData[index][field] = parseFloat(value) || 0;
-            let used = gasData[index].currReading - gasData[index].prevReading;
-            if (used < 0) used = 0;
-            
-            let mainTk = parseFloat(document.getElementById('mainTotalTk').value) || 0;
-            let mainUnit = parseFloat(document.getElementById('mainTotalUnit').value) || 0;
-            let perUnitRate = mainUnit > 0 ? (mainTk / mainUnit) : 15;
-            let bill = used * perUnitRate;
-
-            gasData[index].usedUnit = used.toFixed(2);
-            gasData[index].totalBill = bill.toFixed(2);
-
-            document.getElementById(`used-${index}`).innerText = used.toFixed(2);
-            document.getElementById(`bill-${index}`).innerText = '৳ ' + bill.toFixed(2);
-
-            calculateTotalsOnly();
-        }
-
-        function calculateTotalsOnly() {
-            let sumUnit = 0;
-            let sumTk = 0;
-            gasData.forEach(meter => {
-                sumUnit += parseFloat(meter.usedUnit) || 0;
-                sumTk += parseFloat(meter.totalBill) || 0;
-            });
-            document.getElementById('calcTotalUnit').innerText = sumUnit.toFixed(2) + " m³";
-            document.getElementById('calcTotalTk').innerText = '৳ ' + sumTk.toFixed(2);
-        }
-
-        function calculateBills() {
-            let mainTk = parseFloat(document.getElementById('mainTotalTk').value) || 0;
-            let mainUnit = parseFloat(document.getElementById('mainTotalUnit').value) || 0;
-            let perUnitRate = mainUnit > 0 ? (mainTk / mainUnit) : 15;
-
-            let sumUnit = 0;
-            let sumTk = 0;
-
-            gasData.forEach((meter, index) => {
-                let used = meter.currReading - meter.prevReading;
-                if (used < 0) used = 0; 
-                let bill = used * perUnitRate;
-
-                gasData[index].usedUnit = used.toFixed(2);
-                gasData[index].totalBill = bill.toFixed(2);
-
-                sumUnit += used;
-                sumTk += bill;
