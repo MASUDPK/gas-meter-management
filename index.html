@@ -1,263 +1,184 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gas Meter Management System</title>
 
-<title>Gas Meter Management System</title>
-
-<style>
-*{
-    box-sizing:border-box;
-    font-family:Arial, sans-serif;
-}
-
-body{
-    margin:0;
-    background:#f7f3ed;
-    color:#333;
-}
-
-.header{
-    background:#6f5138;
-    color:white;
-    padding:20px;
-    text-align:center;
-}
-
-.header h1{
-    margin:0;
-    font-size:24px;
-}
-
-.header h2{
-    margin:8px 0;
-    font-size:20px;
-}
-
-.info{
-    font-size:14px;
-    line-height:22px;
-}
-
-
-.container{
-    padding:15px;
-}
-
-
-.dashboard{
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:12px;
-}
-
-
-.box{
-    background:#fff;
-    padding:15px;
-    border-radius:8px;
-    box-shadow:0 2px 8px rgba(0,0,0,0.08);
-}
-
-
-.box h3{
-    margin:0;
-    color:#6f5138;
-    font-size:15px;
-}
-
-
-.box input{
-    width:100%;
-    margin-top:8px;
-    padding:10px;
-    border:1px solid #ddd;
-    border-radius:6px;
-}
-
-
-.unit-card{
-    background:white;
-    margin-top:15px;
-    padding:15px;
-    border-radius:8px;
-    box-shadow:0 2px 8px rgba(0,0,0,.08);
-}
-
-
-.unit-title{
-    color:#6f5138;
-    font-size:20px;
-    font-weight:bold;
-}
-
-
-input{
-    width:100%;
-    padding:9px;
-    margin-top:8px;
-    border:1px solid #ddd;
-    border-radius:6px;
-}
-
-
-button{
-    margin-top:10px;
-    padding:10px 15px;
-    border:none;
-    background:#6f5138;
-    color:white;
-    border-radius:8px;
-}
-
-
-.paid{
-    background:#d9f2d9;
-    padding:8px;
-    border-radius:6px;
-}
-
-
-.due{
-    background:#ffdede;
-    padding:8px;
-    border-radius:6px;
-}
-
-
-@media(max-width:600px){
-
-.dashboard{
-    grid-template-columns:1fr;
-}
-
-}
-</style>
-
+    <link rel="stylesheet" href="style.css">
 </head>
+
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- AutoTable -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+<script src="script.js"></script>
 
 
 <body>
 
 
-<div class="header">
-
-<h1>Gas Meter Management System</h1>
-
-<h2>Jamela Bhaban-1</h2>
-
-<div class="info">
-Model City, Mouchak, Kaliakor, Gazipur
-</div>
-
-<div class="info">
-📞 +8801857969805
-</div>
-
-<div class="info">
-✉️ rejaul1722@gmail.com
-</div>
-
-</div>
-
-
 
 <div class="container">
 
+    <!-- Sidebar -->
 
-<div class="dashboard">
+    <div class="sidebar">
 
+        <h2>Gas Meter</h2>
 
-<div class="box">
-<h3>Total Unit</h3>
-<h2>28</h2>
+        <ul>
+            <li>🏠 Dashboard</li>
+            <li>👥 Customers</li>
+            <li>🧾 Bills</li>
+            <li>📊 Reports</li>
+            <li>⚙ Settings</li>
+        </ul>
+
+    </div>
+
+    <!-- Main -->
+
+    <div class="main">
+
+        <div class="header">
+
+            <h1>Gas Meter Management System</h1>
+
+            <h3>
+                Jamila Bhavan<br>
+                Model City, Mouchak
+            </h3>
+
+        </div>
+
+        <!-- Dashboard -->
+
+        <div class="dashboard">
+
+            <div class="card">
+                <h2 id="totalMeter">28</h2>
+                <p>Total Meter</p>
+            </div>
+
+            <div class="card">
+                <h2 id="activeCustomer">28</h2>
+                <p>Active Customer</p>
+            </div>
+
+            <div class="card">
+                <h2 id="totalBill">0</h2>
+                <p>Total Bill</p>
+            </div>
+
+        </div>
+
+        <!-- Toolbar -->
+
+        <div class="toolbar">
+
+            <input
+                type="text"
+                id="searchBox"
+                placeholder="Search Customer...">
+
+            <button id="addCustomerBtn">
+                ➕ Add Customer
+            </button>
+
+            <button id="printBtn">
+                🖨 Print
+            </button>
+            
+            <button id="newMonthBtn">
+                📅 Start New Month
+            </button>
+        </div>
+
+        <h2 id="customerListTitle">
+            Customer List (28 Meters)
+        </h2>
+
+        <!-- Table -->
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>Meter</th>
+                    <th>Name</th>
+                    <th>Mobile</th>
+                    <th>Flat</th>
+                    <th>Previous</th>
+                    <th>Current</th>
+                    <th>Used Unit</th>
+                    <th>Rate</th>
+                    <th>Bill</th>
+                    <th>Status</th>
+                    <th>Action</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="customerTable">
+
+            </tbody>
+
+        </table>
+
+    </div>
+
 </div>
 
+<!-- Add Customer Modal -->
 
-<div class="box">
-<h3>Gas Rate</h3>
-<input type="number" placeholder="Enter Rate">
-</div>
+<div id="customerModal" class="modal">
 
+    <div class="modal-content">
 
-<div class="box">
-<h3>Total Bill</h3>
-<h2>৳ 0</h2>
-</div>
+        <h2>Add Customer</h2>
 
+        <input type="number" id="meterNo" placeholder="Meter Number">
 
-<div class="box">
-<h3>Total Due</h3>
-<h2>৳ 0</h2>
-</div>
+        <input type="text" id="customerName" placeholder="Customer Name">
 
+        <input type="text" id="mobile" placeholder="Mobile Number">
 
-</div>
+        <input type="text" id="flatNo" placeholder="Flat Number">
 
+        <input
+            type="number"
+            id="previousReading"
+            placeholder="Previous Reading"
+            readonly>
 
+        <input type="number" id="currentReading" placeholder="Current Reading">
 
-<div id="units"></div>
+        <input type="number" id="gasRate" placeholder="Gas Rate">
 
+        <select id="status">
+            <option>Active</option>
+            <option>Inactive</option>
+        </select>
 
-</div>
+        <div class="modal-buttons">
 
+            <button id="saveCustomer">Save</button>
 
+            <button id="closeModal">Cancel</button>
 
-<script>
+        </div>
 
-const units=[
-"A-2","A-3","A-4","A-5","A-6","A-7","A-8",
-"B-2","B-4","B-5","B-6","B-7","B-8",
-"C-2","C-3","C-4","C-5","C-6","C-7","C-8",
-"D-1","D-2","D-3","D-4","D-5","D-6","D-7","D-8"
-];
-
-
-let area=document.getElementById("units");
-
-
-units.forEach(unit=>{
-
-area.innerHTML += `
-
-<div class="unit-card">
-
-<div class="unit-title">${unit}</div>
-
-
-<input placeholder="Tenant Name">
-
-<input placeholder="Mobile Number">
-
-
-<input type="number" placeholder="Previous Reading">
-
-<input type="number" placeholder="Current Reading">
-
-
-<input type="number" placeholder="Paid Amount">
-
-
-<div class="due">
-Due: ৳0
-</div>
-
-
-<button>Save</button>
-
-<button>WhatsApp</button>
-
+    </div>
 
 </div>
 
-`;
-
-});
-
-
-</script>
-
+<script src="script.js"></script>
 
 </body>
 </html>
